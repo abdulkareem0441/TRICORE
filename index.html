@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>TricorePOS</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0f0f11;--bg2:#18181c;--bg3:#222228;--border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.14);--text:#f0eee8;--muted:#8a8990;--accent:#2563EB;--accent2:#3b82f6;--danger:#e05252;--success:#52c97a;--info:#5298e0;--warn:#e0a852;--sw:235px;--font:'Segoe UI',system-ui,sans-serif}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;display:flex;font-size:14px}
+#sidebar{width:var(--sw);background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:10}
+.brand{padding:14px 16px;border-bottom:1px solid var(--border)}
+.brand-row{display:flex;align-items:center;gap:10px}
+.brand-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;flex-shrink:0;transition:background .3s}
+.brand-name{font-size:15px;font-weight:800}.brand-name span{color:var(--accent2)}
+.co-switcher{margin-top:8px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px 10px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:border .15s;position:relative}
+.co-switcher:hover{border-color:var(--accent)}
+.co-dot{width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#fff;flex-shrink:0}
+.co-name-sw{font-size:12px;font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nav{padding:8px 0;flex:1;overflow-y:auto}
+.nav-section{font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1px;padding:10px 16px 3px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 16px;cursor:pointer;color:var(--muted);font-size:13px;transition:all .15s;border-left:2px solid transparent}
+.nav-item:hover{background:rgba(255,255,255,0.04);color:var(--text)}
+.nav-item.active{background:rgba(37,99,235,0.12);color:var(--accent2);border-left-color:var(--accent)}
+.nav-item.locked{opacity:.35;cursor:not-allowed}
+.nav-item.locked:hover{background:none;color:var(--muted)}
+.user-section{padding:10px 16px;border-top:1px solid var(--border)}
+.user-info{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.u-avatar{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;color:#fff;flex-shrink:0}
+.sign-out-btn{width:100%;background:transparent;border:1px solid var(--border);color:var(--muted);padding:5px;border-radius:6px;cursor:pointer;font-size:12px;transition:all .15s}
+.sign-out-btn:hover{border-color:var(--danger);color:var(--danger)}
+#main{margin-left:var(--sw);flex:1;min-height:100vh}
+.page{display:none;padding:24px 28px}.page.active{display:block}
+.ph{margin-bottom:20px;display:flex;justify-content:space-between;align-items:flex-start}
+.pt{font-size:20px;font-weight:700}.ps{font-size:12px;color:var(--muted);margin-top:2px}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px}
+.sg{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.sc{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
+.sl{font-size:11px;color:var(--muted);margin-bottom:5px}.sv{font-size:20px;font-weight:700}
+.sch{font-size:11px;margin-top:4px}.up{color:var(--success)}.dn{color:var(--danger)}
+.btn{padding:7px 14px;border-radius:7px;border:none;cursor:pointer;font-size:13px;font-weight:600;transition:all .15s}
+.btn-p{background:var(--accent);color:#fff}.btn-p:hover{background:var(--accent2)}
+.btn-s{background:var(--bg3);color:var(--text);border:1px solid var(--border2)}.btn-s:hover{border-color:var(--accent)}
+.btn-d{background:transparent;color:var(--danger);border:1px solid var(--border)}.btn-d:hover{background:rgba(224,82,82,.1);border-color:var(--danger)}
+.btn-sm{padding:5px 10px;font-size:12px}.btn-xs{padding:3px 7px;font-size:11px}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;padding:9px 11px;border-bottom:1px solid var(--border)}
+td{padding:10px 11px;border-bottom:1px solid var(--border);font-size:13px}
+tr:last-child td{border-bottom:none}tr:hover td{background:rgba(255,255,255,.02)}
+.fr{display:grid;gap:10px;margin-bottom:12px}.fr.c2{grid-template-columns:1fr 1fr}.fr.c3{grid-template-columns:1fr 1fr 1fr}
+label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
+input,select,textarea{width:100%;background:var(--bg3);border:1px solid var(--border2);color:var(--text);padding:8px 10px;border-radius:7px;font-size:13px;outline:none;font-family:var(--font)}
+input:focus,select:focus,textarea:focus{border-color:var(--accent)}
+select option{background:var(--bg2)}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
+.bs{background:rgba(82,201,122,.15);color:var(--success)}.bd{background:rgba(224,82,82,.15);color:var(--danger)}
+.bw{background:rgba(224,168,82,.15);color:var(--warn)}.bi{background:rgba(82,152,224,.15);color:var(--info)}
+.bm{background:rgba(138,137,144,.15);color:var(--muted)}.bb{background:rgba(37,99,235,.15);color:var(--accent2)}
+/* MODAL */
+.mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:200;align-items:center;justify-content:center}
+.mo.open{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:12px;padding:24px;width:520px;max-height:90vh;overflow-y:auto}
+.modal-lg{width:620px}
+.mt{font-size:15px;font-weight:700;margin-bottom:16px}
+.mf{display:flex;gap:10px;justify-content:flex-end;margin-top:16px}
+/* LOGIN */
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--bg);width:100%;padding:20px}
+.lb{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:36px 32px;width:420px;max-width:100%;margin:auto;box-shadow:0 10px 30px rgba(0,0,0,.4)}
+.llr{display:flex;align-items:center;gap:12px;justify-content:center;margin-bottom:6px}
+.li{width:44px;height:44px;background:var(--accent);border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:#fff}
+.lt{font-size:24px;font-weight:800}.lt span{color:var(--accent2)}
+.lsub{font-size:13px;color:var(--muted);text-align:center;margin-top:4px;margin-bottom:24px;width:100%}
+.gb{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:11px;border-radius:8px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:14px;font-weight:600;cursor:pointer;transition:all .2s}
+.gb:hover{background:rgba(255,255,255,.07);border-color:var(--accent)}
+.dg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.db{background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:9px;border-radius:8px;cursor:pointer;transition:all .15s;text-align:center;font-size:12px}
+.db:hover{border-color:var(--accent)}
+.dr{font-size:10px;margin-top:3px;border-radius:20px;display:inline-block;padding:1px 7px}
+/* CO DROPDOWN */
+#co-drop{display:none;position:fixed;left:10px;background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:8px;z-index:50;width:218px;box-shadow:0 8px 32px rgba(0,0,0,.5)}
+#co-drop.open{display:block}
+.cdi{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:7px;cursor:pointer;transition:all .15s}
+.cdi:hover{background:var(--bg3)}
+.cdi.cur{background:rgba(37,99,235,.12)}
+.cd-sep{height:1px;background:var(--border);margin:6px 0}
+.cd-add{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:7px;cursor:pointer;color:var(--accent2);font-size:13px;font-weight:600}
+.cd-add:hover{background:var(--bg3)}
+/* POS */
+.pos-layout{display:grid;grid-template-columns:1fr 310px;gap:16px}
+.pos-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.pos-card{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px;cursor:pointer;transition:all .15s}
+.pos-card:hover{border-color:var(--accent)}
+.cart-panel{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px;display:flex;flex-direction:column;max-height:580px}
+.cart-items{flex:1;overflow-y:auto;margin-bottom:10px}
+.cart-item{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)}
+.cin{flex:1;font-size:12px}
+.cqb{background:var(--bg3);border:1px solid var(--border);color:var(--text);width:20px;height:20px;border-radius:4px;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center}
+.cit{font-size:12px;font-weight:600;color:var(--accent2);min-width:64px;text-align:right}
+.cs{border-top:1px solid var(--border);padding-top:10px}
+.cr{display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px}
+.ctot{font-size:15px;font-weight:700;color:var(--accent2)}
+.cw{position:relative;height:200px}
+/* CO CARD */
+.co-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px;display:flex;gap:14px;margin-bottom:12px}
+.co-logo{width:48px;height:48px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:#fff;flex-shrink:0}
+.co-ci{flex:1}
+.co-cn{font-size:14px;font-weight:700}
+.co-cs{font-size:12px;color:var(--muted);margin-top:2px}
+.co-actions{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;align-items:center}
+.co-chips{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
+.chip{font-size:11px;padding:2px 8px;border-radius:20px;background:var(--bg3);border:1px solid var(--border)}
+/* ASSIGN */
+.al{max-height:180px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:6px}
+.ai{display:flex;align-items:center;gap:10px;padding:7px;border-radius:6px;cursor:pointer;transition:background .1s}
+.ai:hover{background:var(--bg3)}
+.ai input[type=checkbox]{width:15px;height:15px;accent-color:var(--accent);flex-shrink:0;cursor:pointer}
+.aa{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0}
+.an{font-size:13px;font-weight:500}.ar{font-size:11px;color:var(--muted)}
+.swatches{display:flex;gap:7px;flex-wrap:wrap;margin-top:6px}
+.sw{width:28px;height:28px;border-radius:7px;cursor:pointer;border:2px solid transparent;transition:all .15s}
+.sw.sel{border-color:#fff;transform:scale(1.15)}
+/* ACT */
+.act-item{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)}
+.act-dot{width:7px;height:7px;border-radius:50%;margin-top:5px;flex-shrink:0}
+.perm-table{width:100%;border-collapse:collapse}
+.perm-table th{font-size:11px;color:var(--muted);padding:7px 9px;text-align:center;border-bottom:1px solid var(--border)}
+.perm-table th:first-child{text-align:left}
+.perm-table td{padding:8px 9px;border-bottom:1px solid var(--border);font-size:13px;text-align:center}
+.perm-table td:first-child{text-align:left;font-weight:500}
+.pk{color:var(--success)}.px{color:var(--border2)}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="lb">
+    <div class="llr"><div class="li">T</div><div class="lt">Tricore<span>POS</span></div></div>
+    <div class="lsub">Multi-Company Retail Management</div>
+    <button class="gb" onclick="handleGoogleSignIn()">
+      <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+      Sign in with Google
+    </button>
+    
+    
+  </div>
+</div>
+
+<!-- CO DROPDOWN (outside sidebar for z-index) -->
+<div id="co-drop">
+  <div id="co-drop-list"></div>
+  <div class="cd-sep"></div>
+  <div class="cd-add" onclick="openCoModal()">＋ Add New Company</div>
+</div>
+
+<!-- APP -->
+<div id="app-shell" style="display:none;width:100%">
+  <div id="sidebar">
+    <div class="brand">
+      <div class="brand-row">
+        <div class="brand-icon" id="sb-icon">T</div>
+        <div><div class="brand-name">Tricore<span>POS</span></div></div>
+      </div>
+      <div class="co-switcher" id="co-sw" onclick="toggleDrop(event)">
+        <div class="co-dot" id="sw-dot">T</div>
+        <div class="co-name-sw" id="sw-name">—</div>
+        <div style="font-size:10px;color:var(--muted)">▼</div>
+      </div>
+    </div>
+    <nav class="nav" id="nav-menu"></nav>
+    <div class="user-section">
+      <div class="user-info">
+        <div class="u-avatar" id="u-av">?</div>
+        <div><div style="font-size:12px;font-weight:600" id="u-nm">User</div><div style="font-size:10px;color:var(--muted)" id="u-em"></div><div id="u-role-chip" style="margin-top:2px"></div></div>
+      </div>
+      <button class="sign-out-btn" onclick="signOut()">Sign out</button>
+    </div>
+  </div>
+
+  <div id="main">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="ph"><div><div class="pt" id="dash-title">Dashboard</div><div class="ps" id="dash-date"></div></div></div>
+      <div class="sg">
+        <div class="sc"><div class="sl">Today's Sales</div><div class="sv" id="st-today">TZS 0</div><div class="sch up" id="st-tc">0 transactions</div></div>
+        <div class="sc"><div class="sl">This Month</div><div class="sv" id="st-month">TZS 0</div><div class="sch up" id="st-mc">0 transactions</div></div>
+        <div class="sc"><div class="sl">Inventory Items</div><div class="sv" id="st-inv">0</div><div class="sch" id="st-ls"></div></div>
+        <div class="sc"><div class="sl">Monthly Expenses</div><div class="sv" id="st-exp">TZS 0</div><div class="sch" id="st-ec"></div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="card"><div style="font-size:14px;font-weight:700;margin-bottom:12px">Sales This Week</div><div class="cw"><canvas id="sales-chart"></canvas></div></div>
+        <div class="card"><div style="font-size:14px;font-weight:700;margin-bottom:12px">Recent Transactions</div><div id="recent-txns"></div></div>
+      </div>
+    </div>
+
+    <!-- SALES -->
+    <div class="page" id="page-sales">
+      <div class="ph"><div><div class="pt">Point of Sale</div><div class="ps" id="pos-co-lbl">—</div></div>
+        <input type="text" id="pos-search" placeholder="Search products..." style="width:190px" oninput="renderPOS()"></div>
+      <div class="pos-layout">
+        <div><div class="pos-grid" id="pos-grid"></div></div>
+        <div class="cart-panel">
+          <div style="font-size:14px;font-weight:700;margin-bottom:10px">🛒 Cart</div>
+          <div class="cart-items" id="cart-items"><div style="color:var(--muted);font-size:13px;text-align:center;padding:16px">Cart empty</div></div>
+          <div class="cs">
+            <div class="cr"><span style="color:var(--muted)">Subtotal</span><span id="cart-sub">TZS 0</span></div>
+            <div class="cr"><span style="color:var(--muted)">Discount</span><span style="display:flex;align-items:center;gap:4px"><input type="number" id="disc-in" value="0" min="0" style="width:50px;text-align:right;padding:3px 5px;font-size:12px" oninput="updCart()">%</span></div>
+            <div class="cr"><span class="ctot">Total</span><span class="ctot" id="cart-total">TZS 0</span></div>
+            <div style="margin:7px 0"><label>Payment</label><select id="pay-method"><option>Cash</option><option>M-Pesa</option><option>Card</option><option>Bank Transfer</option></select></div>
+            <div style="margin-bottom:8px"><label>Customer</label><input type="text" id="cust-name" placeholder="Walk-in customer"></div>
+            <button class="btn btn-p" style="width:100%" onclick="completeSale()">Complete Sale ✓</button>
+            <button class="btn btn-s" style="width:100%;margin-top:6px" onclick="clearCart()">Clear Cart</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- INVENTORY -->
+    <div class="page" id="page-inventory">
+      <div class="ph"><div><div class="pt">Inventory</div><div class="ps" id="inv-co-lbl">—</div></div>
+        <button class="btn btn-p" id="btn-add-inv" onclick="openInvModal()">+ Add Item</button></div>
+      <div style="display:flex;gap:10px;margin-bottom:14px">
+        <input type="text" style="flex:1" id="inv-search" placeholder="Search..." oninput="renderInv()">
+        <select id="inv-cat" onchange="renderInv()" style="width:140px"><option value="">All Categories</option><option>Men's Wear</option><option>Women's Wear</option><option>Kids</option><option>Shoes</option><option>Accessories</option><option>Sportswear</option></select>
+      </div>
+      <div class="card"><table><thead><tr><th>Item</th><th>Category</th><th>Size</th><th>Price</th><th>Stock</th><th>Status</th><th id="inv-act-hdr">Actions</th></tr></thead><tbody id="inv-tbody"></tbody></table>
+        <div id="inv-empty" style="text-align:center;padding:24px;color:var(--muted);font-size:13px;display:none">No items yet.</div></div>
+    </div>
+
+    <!-- EXPENSES -->
+    <div class="page" id="page-expenses">
+      <div class="ph"><div><div class="pt">Expenses</div><div class="ps" id="exp-co-lbl">—</div></div>
+        <button class="btn btn-p" id="btn-add-exp" onclick="openExpModal()">+ Add Expense</button></div>
+      <div class="sg" style="grid-template-columns:repeat(3,1fr)">
+        <div class="sc"><div class="sl">This Month</div><div class="sv" id="em">TZS 0</div></div>
+        <div class="sc"><div class="sl">This Year</div><div class="sv" id="ey">TZS 0</div></div>
+        <div class="sc"><div class="sl">All Time</div><div class="sv" id="et">TZS 0</div></div>
+      </div>
+      <div class="card"><table><thead><tr><th>Date</th><th>Category</th><th>Description</th><th>Amount</th><th>Paid By</th><th></th></tr></thead><tbody id="exp-tbody"></tbody></table>
+        <div id="exp-empty" style="text-align:center;padding:24px;color:var(--muted);font-size:13px;display:none">No expenses.</div></div>
+    </div>
+
+    <!-- REPORTS -->
+    <div class="page" id="page-reports">
+      <div class="ph"><div><div class="pt">Reports</div><div class="ps" id="rep-co-lbl">—</div></div>
+        <div style="display:flex;gap:8px">
+          <select id="rep-period" onchange="updateReports()" style="width:140px"><option value="week">This Week</option><option value="month" selected>This Month</option><option value="year">This Year</option><option value="all">All Time</option></select>
+          <button class="btn btn-s" onclick="exportCSV()">⬇ CSV</button>
+        </div></div>
+      <div class="sg"><div class="sc"><div class="sl">Revenue</div><div class="sv" id="rr">TZS 0</div></div><div class="sc"><div class="sl">Expenses</div><div class="sv" id="re">TZS 0</div></div><div class="sc"><div class="sl">Net Profit</div><div class="sv" id="rp">TZS 0</div></div><div class="sc"><div class="sl">Transactions</div><div class="sv" id="rt">0</div></div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+        <div class="card"><div style="font-size:14px;font-weight:700;margin-bottom:12px">Revenue vs Expenses</div><div class="cw"><canvas id="rev-chart"></canvas></div></div>
+        <div class="card"><div style="font-size:14px;font-weight:700;margin-bottom:12px">Sales by Category</div><div class="cw"><canvas id="cat-chart"></canvas></div></div>
+      </div>
+      <div class="card"><div style="font-size:14px;font-weight:700;margin-bottom:12px">Top Items</div><table><thead><tr><th>#</th><th>Item</th><th>Qty</th><th>Revenue</th></tr></thead><tbody id="top-tbody"></tbody></table></div>
+    </div>
+
+    <!-- COMPANIES -->
+    <div class="page" id="page-companies">
+      <div class="ph"><div><div class="pt">Companies</div><div class="ps">Manage all your businesses</div></div>
+        <button class="btn btn-p" onclick="openCoModal()">+ Add Company</button></div>
+      <div id="companies-list"></div>
+    </div>
+
+    <!-- USERS -->
+    <div class="page" id="page-users">
+      <div class="ph"><div><div class="pt">Users & Access</div><div class="ps">Manage staff and company assignments</div></div>
+        <button class="btn btn-p" onclick="openUserModal()">+ Add User</button></div>
+      <div class="card" style="margin-bottom:16px">
+        <div style="font-size:14px;font-weight:700;margin-bottom:12px">Role Permissions</div>
+        <table class="perm-table"><thead><tr><th>Permission</th><th>👑 Owner</th><th>🧑‍💼 Manager</th><th>🧾 Cashier</th><th>👁 Viewer</th></tr></thead>
+        <tbody>
+          <tr><td>View Dashboard</td><td><span class="pk">✓</span></td><td><span class="pk">✓</span></td><td><span class="pk">✓</span></td><td><span class="pk">✓</span></td></tr>
+          <tr><td>Make Sales</td><td><span class="pk">✓</span></td><td><span class="pk">✓</span></td><td><span class="pk">✓</span></td><td><span class="px">—</span></td></tr>
+          <tr><td>Edit Inventory</td><td><span class="pk">✓</span></td><td><span class="pk">✓</span></td><td><span class="px">—</span></td><td><span class="px">—</span></td></tr>
+          <tr><td>Add Expenses</td><td><span class="pk">✓</span></td><td><span class="pk">✓</span></td><td><span class="px">—</span></td><td><span class="px">—</span></td></tr>
+          <tr><td>View Reports</td><td><span class="pk">✓</span></td><td><span class="pk">✓</span></td><td><span class="px">—</span></td><td><span class="pk">✓</span></td></tr>
+          <tr><td>Manage Users</td><td><span class="pk">✓</span></td><td><span class="px">—</span></td><td><span class="px">—</span></td><td><span class="px">—</span></td></tr>
+          <tr><td>Manage Companies</td><td><span class="pk">✓</span></td><td><span class="px">—</span></td><td><span class="px">—</span></td><td><span class="px">—</span></td></tr>
+          <tr><td>Switch Companies</td><td><span class="pk">✓</span></td><td><span class="pk">✓ (assigned)</span></td><td><span class="pk">✓ (assigned)</span></td><td><span class="pk">✓ (assigned)</span></td></tr>
+        </tbody></table>
+      </div>
+      <div id="users-list"></div>
+    </div>
+
+    <!-- ACTIVITY -->
+    <div class="page" id="page-activity">
+      <div class="ph"><div><div class="pt">Activity Log</div><div class="ps">All companies audit trail</div></div>
+        <button class="btn btn-s btn-sm" onclick="APP.activityLog=[];saveLocal();renderActivity()">Clear</button></div>
+      <div style="display:flex;gap:8px;margin-bottom:14px">
+        <select id="act-co-f" onchange="renderActivity()" style="width:200px"><option value="">All Companies</option></select>
+        <select id="act-role-f" onchange="renderActivity()" style="width:140px"><option value="">All Roles</option><option>owner</option><option>manager</option><option>cashier</option><option>viewer</option></select>
+      </div>
+      <div class="card"><div id="act-list"></div><div id="act-empty" style="text-align:center;padding:24px;color:var(--muted);font-size:13px">No activity yet.</div></div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="page" id="page-settings">
+      <div class="ph"><div><div class="pt">Settings</div></div></div>
+      <div class="card" style="max-width:480px">
+        <div style="font-size:14px;font-weight:700;margin-bottom:14px">Google Integration</div>
+        <div class="fr"><label>Google Client ID</label><input type="password" value="Configured Securely" disabled></div>
+        <div class="fr"><label>Default Sheet ID</label><input type="text" id="set-sid" placeholder="Sheet ID"></div>
+        <button class="btn btn-p" onclick="saveConfig()">Save</button>
+        <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+          <button class="btn btn-d" onclick="if(confirm('Reset ALL data?')){localStorage.removeItem('tpos4_data');location.reload()}">🗑 Reset All Data</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODALS ═══ -->
+
+<!-- ADD/EDIT COMPANY -->
+<div class="mo" id="mo-company">
+  <div class="modal modal-lg">
+    <div class="mt" id="co-modal-title">Add New Company</div>
+    <div class="fr c2">
+      <div><label>Company Name *</label><input type="text" id="co-name" placeholder="Tricore Boutique"></div>
+      <div><label>Business Type</label><select id="co-type"><option>Clothing & Fashion</option><option>Shoe Store</option><option>Boutique</option><option>Wholesale</option><option>Multi-Brand</option><option>Other Retail</option></select></div>
+    </div>
+    <div class="fr c2">
+      <div><label>City</label><input type="text" id="co-city" placeholder="Dar es Salaam"></div>
+      <div><label>Country</label><select id="co-country"><option>Tanzania</option><option>Kenya</option><option>Uganda</option><option>Rwanda</option><option>Other</option></select></div>
+    </div>
+    <div class="fr c2">
+      <div><label>Phone</label><input type="text" id="co-phone" placeholder="+255 ..."></div>
+      <div><label>TIN / Tax Number</label><input type="text" id="co-tin" placeholder="Tax ID"></div>
+    </div>
+    <div class="fr c2">
+      <div><label>Currency</label><select id="co-currency"><option value="TZS">TZS — Tanzanian Shilling</option><option value="KES">KES — Kenyan Shilling</option><option value="USD">USD — US Dollar</option><option value="UGX">UGX — Ugandan Shilling</option></select></div>
+      <div><label>Google Sheet ID</label><input type="text" id="co-sheet" placeholder="Sheet ID for this company"></div>
+    </div>
+    <div class="fr"><label>Address</label><input type="text" id="co-addr" placeholder="Street, Area"></div>
+    <div class="fr"><label>Receipt Footer Message</label><input type="text" id="co-receipt" placeholder="Thank you for shopping with us!"></div>
+    <div class="fr">
+      <label>Brand Color</label>
+      <div class="swatches" id="co-swatches">
+        <div class="sw sel" style="background:#2563EB" onclick="pickColor('#2563EB',this)"></div>
+        <div class="sw" style="background:#7C3AED" onclick="pickColor('#7C3AED',this)"></div>
+        <div class="sw" style="background:#059669" onclick="pickColor('#059669',this)"></div>
+        <div class="sw" style="background:#DC2626" onclick="pickColor('#DC2626',this)"></div>
+        <div class="sw" style="background:#D97706" onclick="pickColor('#D97706',this)"></div>
+        <div class="sw" style="background:#0891B2" onclick="pickColor('#0891B2',this)"></div>
+        <div class="sw" style="background:#BE185D" onclick="pickColor('#BE185D',this)"></div>
+        <div class="sw" style="background:#374151" onclick="pickColor('#374151',this)"></div>
+      </div>
+    </div>
+    <div class="fr">
+      <label>Assign Users to this Company</label>
+      <div class="al" id="co-user-assign"><div style="color:var(--muted);font-size:12px;padding:6px">No staff users yet — add users first.</div></div>
+    </div>
+    <div class="mf">
+      <button class="btn btn-s" onclick="closeMo('mo-company')">Cancel</button>
+      <button class="btn btn-p" onclick="saveCompany()">Save Company</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD/EDIT USER -->
+<div class="mo" id="mo-user">
+  <div class="modal">
+    <div class="mt" id="um-title">Add Staff Member</div>
+    <div class="fr c2">
+      <div><label>Full Name *</label><input type="text" id="u-name"></div>
+      <div><label>Email *</label><input type="email" id="u-email"></div>
+    </div>
+    <div class="fr c2">
+      <div><label>Role *</label><select id="u-role"><option value="manager">Manager</option><option value="cashier">Cashier</option><option value="viewer">Viewer</option></select></div>
+      <div><label>Status</label><select id="u-status"><option value="active">Active</option><option value="inactive">Inactive</option></select></div>
+    </div>
+    <div class="fr"><label>Notes / Department</label><input type="text" id="u-notes" placeholder="Morning shift, Branch A..."></div>
+    <div class="fr">
+      <label>Assign to Companies</label>
+      <div class="al" id="u-co-list"><div style="color:var(--muted);font-size:12px;padding:6px">No companies yet.</div></div>
+    </div>
+    <div class="mf">
+      <button class="btn btn-s" onclick="closeMo('mo-user')">Cancel</button>
+      <button class="btn btn-p" onclick="saveUser()">Save User</button>
+    </div>
+  </div>
+</div>
+
+<!-- ASSIGN USERS to Company -->
+<div class="mo" id="mo-assign">
+  <div class="modal">
+    <div class="mt" id="assign-title">Assign Users</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Select users who can access this company</div>
+    <div class="al" id="assign-list"></div>
+    <div class="mf">
+      <button class="btn btn-s" onclick="closeMo('mo-assign')">Cancel</button>
+      <button class="btn btn-p" onclick="saveAssign()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- INVENTORY -->
+<div class="mo" id="mo-inv">
+  <div class="modal">
+    <div class="mt" id="inv-modal-title">Add Inventory Item</div>
+    <div class="fr c2"><div><label>Name *</label><input type="text" id="inv-name"></div><div><label>Category</label><select id="inv-cat-sel"><option>Men's Wear</option><option>Women's Wear</option><option>Kids</option><option>Shoes</option><option>Accessories</option><option>Sportswear</option></select></div></div>
+    <div class="fr c3"><div><label>Size</label><input type="text" id="inv-size"></div><div><label>Color</label><input type="text" id="inv-color"></div><div><label>Stock *</label><input type="number" id="inv-stock" min="0"></div></div>
+    <div class="fr c2"><div><label>Price (TZS) *</label><input type="number" id="inv-price" min="0"></div><div><label>Cost (TZS)</label><input type="number" id="inv-cost" min="0"></div></div>
+    <div class="fr"><label>SKU</label><input type="text" id="inv-sku"></div>
+    <div class="mf"><button class="btn btn-s" onclick="closeMo('mo-inv')">Cancel</button><button class="btn btn-p" onclick="saveInv()">Save</button></div>
+  </div>
+</div>
+
+<!-- EXPENSE -->
+<div class="mo" id="mo-exp">
+  <div class="modal">
+    <div class="mt">Record Expense</div>
+    <div class="fr c2"><div><label>Date *</label><input type="date" id="exp-date"></div><div><label>Category</label><select id="exp-cat"><option>Rent</option><option>Utilities</option><option>Salaries</option><option>Stock Purchase</option><option>Transport</option><option>Marketing</option><option>Other</option></select></div></div>
+    <div class="fr"><label>Description *</label><input type="text" id="exp-desc"></div>
+    <div class="fr c2"><div><label>Amount *</label><input type="number" id="exp-amount" min="0"></div><div><label>Paid By</label><select id="exp-paid"><option>Cash</option><option>M-Pesa</option><option>Bank</option><option>Card</option></select></div></div>
+    <div class="mf"><button class="btn btn-s" onclick="closeMo('mo-exp')">Cancel</button><button class="btn btn-p" onclick="saveExp()">Record</button></div>
+  </div>
+</div>
+
+<!-- RECEIPT -->
+<div class="mo" id="mo-receipt">
+  <div class="modal" style="width:340px;text-align:center">
+    <div style="font-size:24px;margin-bottom:4px">✅</div>
+    <div class="mt" style="text-align:center">Sale Complete!</div>
+    <div id="receipt-body" style="background:var(--bg3);border-radius:8px;padding:12px;text-align:left;font-size:12px;margin-bottom:12px"></div>
+    <div class="mf" style="justify-content:center"><button class="btn btn-s" onclick="window.print()">🖨 Print</button><button class="btn btn-p" onclick="closeMo('mo-receipt')">New Sale</button></div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════
+// CONSTANTS
+// ════════════════════════════════════════════════
+const ROLES={owner:{l:'Owner',e:'👑'},manager:{l:'Manager',e:'🧑‍💼'},cashier:{l:'Cashier',e:'🧾'},viewer:{l:'Viewer',e:'👁'}};
+const RC={owner:'#c9a96e',manager:'#5298e0',cashier:'#52c97a',viewer:'#8a8990'};
+const PL={owner:4,manager:3,cashier:2,viewer:1};
+const NAV_CFG=[
+  {id:'dashboard',label:'Dashboard',e:'📊',minRole:'viewer',section:'Main'},
+  {id:'sales',label:'Sales / POS',e:'🛒',minRole:'cashier',section:null},
+  {id:'inventory',label:'Inventory',e:'📦',minRole:'viewer',section:null},
+  {id:'expenses',label:'Expenses',e:'💸',minRole:'viewer',section:null},
+  {id:'reports',label:'Reports',e:'📈',minRole:'viewer',section:null},
+  {id:'companies',label:'Companies',e:'🏢',minRole:'owner',section:'Admin'},
+  {id:'users',label:'Users & Access',e:'👥',minRole:'owner',section:null},
+  {id:'activity',label:'Activity Log',e:'📋',minRole:'manager',section:null},
+  {id:'settings',label:'Settings',e:'⚙',minRole:'owner',section:null},
+];
+
+// ════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════
+const APP={
+  config:{clientId:'356748819870-kbpqp86ja6b0r1543mnk3v4o178ivkv2.apps.googleusercontent.com'},
+  user:null,role:null,accessToken:null,
+  companies:[],users:[],activityLog:[],
+  activeCoId:null,cart:[],
+  editingCoId:null,editingUserId:null,assigningCoId:null,
+  selColor:'#2563EB',charts:{},editingInvId:null
+};
+
+function activeCo(){return APP.companies.find(c=>c.id===APP.activeCoId)||APP.companies[0]||{};}
+function uid(){return '_'+Math.random().toString(36).substr(2,9);}
+function today(){return new Date().toISOString().split('T')[0];}
+function fmt(n){const c=activeCo().currency||'TZS';return c+' '+Math.round(n).toLocaleString();}
+function canRole(min){return PL[APP.role]>=PL[min];}
+function saveLocal(){localStorage.setItem('tpos4_data',JSON.stringify({companies:APP.companies,users:APP.users,activityLog:APP.activityLog,activeCoId:APP.activeCoId}));}
+function saveConfig(){
+  APP.config.clientId='356748819870-kbpqp86ja6b0r1543mnk3v4o178ivkv2.apps.googleusercontent.com';
+  localStorage.setItem('tpos4_cfg',JSON.stringify(APP.config));
+}
+function log(action,detail,coId){const cid=coId||APP.activeCoId;APP.activityLog.unshift({id:uid(),ts:new Date().toISOString(),user:APP.user?.name||'?',role:APP.role,action,detail:detail||'',coId:cid,coName:(APP.companies.find(c=>c.id===cid)||{}).name||''});if(APP.activityLog.length>300)APP.activityLog.pop();saveLocal();}
+
+// ════════════════════════════════════════════════
+// MODAL HELPERS — simple, no override tricks
+// ════════════════════════════════════════════════
+function openMo(id){document.getElementById(id).classList.add('open');}
+function closeMo(id){document.getElementById(id).classList.remove('open');}
+document.addEventListener('click',e=>{
+  document.querySelectorAll('.mo.open').forEach(mo=>{if(e.target===mo)mo.classList.remove('open');});
+  const drop=document.getElementById('co-drop');
+  if(drop.classList.contains('open')&&!drop.contains(e.target)&&!document.getElementById('co-sw').contains(e.target))drop.classList.remove('open');
+});
+
+// ════════════════════════════════════════════════
+// SEED DATA
+// ════════════════════════════════════════════════
+function seedData(){
+  APP.companies=[
+    {id:'co1',name:'Tricore Clothing Ltd',type:'Clothing & Fashion',city:'Dar es Salaam',country:'Tanzania',phone:'+255 712 345 678',tin:'123456789',currency:'TZS',color:'#2563EB',addr:'Kariakoo Market, DSM',receipt:'Thank you for shopping at Tricore!',sheet:'',createdAt:today(),
+      inventory:[{id:'i1',name:'Blue Denim Jeans',cat:"Men's Wear",size:'32',color:'Blue',price:45000,cost:28000,stock:15,sku:'JNS-001'},{id:'i2',name:'Floral Dress',cat:"Women's Wear",size:'M',color:'Pink',price:38000,cost:22000,stock:8,sku:'DRS-002'},{id:'i3',name:'White T-Shirt',cat:"Men's Wear",size:'L',color:'White',price:18000,cost:10000,stock:25,sku:'TSH-003'}],
+      sales:[{id:'s1',date:today(),items:[{name:'White T-Shirt',qty:2,price:18000}],total:36000,payment:'Cash',customer:'John Doe',cashier:'Grace'},{id:'s2',date:today(),items:[{name:'Blue Denim Jeans',qty:1,price:45000}],total:45000,payment:'M-Pesa',customer:'Mary',cashier:'Grace'}],
+      expenses:[{id:'e1',date:today(),cat:'Rent',desc:'Monthly rent',amount:350000,paid:'Bank'},{id:'e2',date:today(),cat:'Utilities',desc:'Electricity',amount:45000,paid:'Cash'}]},
+    {id:'co2',name:'Tricore Shoes Hub',type:'Shoe Store',city:'Arusha',country:'Tanzania',phone:'+255 754 987 654',tin:'987654321',currency:'TZS',color:'#059669',addr:'Central Market, Arusha',receipt:'Step into style with Tricore Shoes!',sheet:'',createdAt:today(),
+      inventory:[{id:'i4',name:'Leather Sneakers',cat:'Shoes',size:'42',color:'Brown',price:85000,cost:55000,stock:6,sku:'SHO-001'},{id:'i5',name:'Running Shoes',cat:'Shoes',size:'41',color:'Black',price:65000,cost:40000,stock:10,sku:'SHO-002'}],
+      sales:[{id:'s3',date:today(),items:[{name:'Leather Sneakers',qty:1,price:85000}],total:85000,payment:'Cash',customer:'Ahmed',cashier:'Ali'}],
+      expenses:[{id:'e3',date:today(),cat:'Rent',desc:'Shop rent Arusha',amount:200000,paid:'Bank'}]}
+  ];
+  APP.users=[
+    {id:'u1',name:'Store Owner',email:'owner@tricorepos.demo',role:'owner',status:'active',notes:'',companies:['co1','co2']},
+    {id:'u2',name:'Ali Mgeni',email:'manager@tricorepos.demo',role:'manager',status:'active',notes:'Branch A',companies:['co1']},
+    {id:'u3',name:'Grace Kimani',email:'cashier@tricorepos.demo',role:'cashier',status:'active',notes:'Morning shift',companies:['co1','co2']},
+    {id:'u4',name:'David Mwamba',email:'viewer@tricorepos.demo',role:'viewer',status:'active',notes:'Accountant',companies:['co1']}
+  ];
+  APP.activityLog=[{id:'a1',ts:new Date().toISOString(),user:'Store Owner',role:'owner',action:'System initialized',detail:'Demo data loaded',coId:'co1',coName:'Tricore Clothing Ltd'}];
+  saveLocal();
+}
+
+// ════════════════════════════════════════════════
+// LOAD FROM STORAGE
+// ════════════════════════════════════════════════
+(function(){
+  const cfg=localStorage.getItem('tpos4_cfg');if(cfg)APP.config=JSON.parse(cfg);APP.config.clientId='356748819870-kbpqp86ja6b0r1543mnk3v4o178ivkv2.apps.googleusercontent.com';
+  const el=document.getElementById('cid-in');if(el)el.value=APP.config.clientId||'';
+  const d=localStorage.getItem('tpos4_data');
+  if(d){try{const p=JSON.parse(d);APP.companies=p.companies||[];APP.users=p.users||[];APP.activityLog=p.activityLog||[];APP.activeCoId=p.activeCoId||null;}catch(e){}}
+})();
+
+// ════════════════════════════════════════════════
+// AUTH
+// ════════════════════════════════════════════════
+function handleGoogleSignIn(){
+  if(!APP.config.clientId){alert('Please enter and save your Google Client ID first.');return;}
+  const s=document.createElement('script');s.src='https://accounts.google.com/gsi/client';
+  s.onload=()=>{APP.tokenClient=google.accounts.oauth2.initTokenClient({client_id:APP.config.clientId,scope:'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',callback:async r=>{if(r.error){alert('Error: '+r.error);return;}APP.accessToken=r.access_token;const res=await fetch('https://www.googleapis.com/oauth2/v2/userinfo',{headers:{Authorization:'Bearer '+r.access_token}});APP.user=await res.json();const found=APP.users.find(u=>u.email.toLowerCase()===APP.user.email.toLowerCase());APP.role=found?found.role:'owner';doEnterApp();}});APP.tokenClient.requestAccessToken();};
+  document.head.appendChild(s);
+}
+
+function demoLogin(role){
+  const names={owner:'Store Owner',manager:'Ali Mgeni',cashier:'Grace Kimani',viewer:'David Mwamba'};
+  APP.user={name:names[role],email:role+'@tricorepos.demo'};APP.role=role;
+  if(APP.companies.length===0)seedData();
+  const me=APP.users.find(u=>u.email===APP.user.email);
+  const myCos=role==='owner'?APP.companies.map(c=>c.id):(me?me.companies||[]:['co1']);
+  if(!myCos.includes(APP.activeCoId)||!APP.activeCoId)APP.activeCoId=myCos[0]||APP.companies[0]?.id;
+  doEnterApp();
+}
+
+function doEnterApp(){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app-shell').style.display='flex';
+  // Sidebar user info
+  const r=ROLES[APP.role]||ROLES.viewer;
+  document.getElementById('u-nm').textContent=APP.user.name;
+  document.getElementById('u-em').textContent=APP.user.email;
+  document.getElementById('u-av').textContent=APP.user.name[0].toUpperCase();
+  document.getElementById('u-av').style.background=RC[APP.role];
+  document.getElementById('u-role-chip').innerHTML=`<span style="background:rgba(37,99,235,.18);color:var(--accent2);font-size:10px;padding:2px 7px;border-radius:20px;font-weight:700">${r.e} ${r.l}</span>`;
+  document.getElementById('dash-date').textContent=new Date().toLocaleDateString('en-TZ',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  document.getElementById('exp-date').value=today();
+  applyTheme();buildNav();refreshAll();populateActFilters();
+  log('Login','Signed in as '+APP.role);
+}
+
+function signOut(){APP.user=null;APP.role=null;APP.accessToken=null;APP.cart=[];document.getElementById('app-shell').style.display='none';document.getElementById('login-screen').style.display='flex';}
+
+// ════════════════════════════════════════════════
+// THEME
+// ════════════════════════════════════════════════
+function applyTheme(){
+  const co=activeCo();const ac=co.color||'#2563EB';
+  document.documentElement.style.setProperty('--accent',ac);
+  document.documentElement.style.setProperty('--accent2',ac);
+  const icon=document.getElementById('sb-icon');
+  icon.style.background=ac;icon.textContent=(co.name||'T')[0].toUpperCase();
+  document.getElementById('sw-dot').style.background=ac;
+  document.getElementById('sw-dot').textContent=(co.name||'T')[0].toUpperCase();
+  document.getElementById('sw-name').textContent=co.name||'Select Company';
+  document.getElementById('dash-title').textContent='Dashboard';
+  document.getElementById('pos-co-lbl').textContent=co.name||'';
+  document.getElementById('inv-co-lbl').textContent=co.name||'';
+  document.getElementById('exp-co-lbl').textContent=co.name||'';
+  document.getElementById('rep-co-lbl').textContent=co.name||'';
+  buildDrop();
+}
+
+// ════════════════════════════════════════════════
+// COMPANY SWITCHER DROPDOWN
+// ════════════════════════════════════════════════
+function toggleDrop(e){e.stopPropagation();const d=document.getElementById('co-drop');d.classList.toggle('open');if(d.classList.contains('open')){const sw=document.getElementById('co-sw');const rect=sw.getBoundingClientRect();d.style.top=(rect.bottom+4)+'px';d.style.left=rect.left+'px';}}
+
+function buildDrop(){
+  const me=APP.users.find(u=>u.email===APP.user?.email);
+  const myCos=APP.role==='owner'?APP.companies:APP.companies.filter(c=>(me?.companies||[]).includes(c.id));
+  document.getElementById('co-drop-list').innerHTML=myCos.map(co=>`
+    <div class="cdi${co.id===APP.activeCoId?' cur':''}" onclick="switchCo('${co.id}')">
+      <div class="co-dot" style="background:${co.color||'#2563EB'};width:22px;height:22px;border-radius:5px">${co.name[0]}</div>
+      <div style="flex:1"><div style="font-size:13px;font-weight:600">${co.name}</div><div style="font-size:11px;color:var(--muted)">${co.city||''}</div></div>
+      ${co.id===APP.activeCoId?'<span style="color:var(--success);font-size:12px">✓</span>':''}
+    </div>`).join('');
+}
+
+function switchCo(id){
+  APP.activeCoId=id;APP.cart=[];saveLocal();
+  document.getElementById('co-drop').classList.remove('open');
+  applyTheme();refreshAll();log('Switched company',activeCo().name);
+}
+
+// ════════════════════════════════════════════════
+// NAV
+// ════════════════════════════════════════════════
+function buildNav(){
+  const nav=document.getElementById('nav-menu');nav.innerHTML='';let sec=null;
+  NAV_CFG.forEach(item=>{
+    if(item.section&&item.section!==sec){sec=item.section;const s=document.createElement('div');s.className='nav-section';s.textContent=item.section;nav.appendChild(s);}
+    const ok=canRole(item.minRole);
+    const el=document.createElement('div');
+    el.className='nav-item'+(item.id==='dashboard'?' active':'')+(!ok?' locked':'');
+    el.innerHTML=`<span>${item.e}</span>${item.label}${!ok?'<span style="font-size:10px;margin-left:auto">🔒</span>':''}`;
+    if(ok)el.onclick=()=>navigate(item.id,el);
+    nav.appendChild(el);
+  });
+}
+
+function navigate(page,el){
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));if(el)el.classList.add('active');
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  if(page==='dashboard')updateDash();
+  if(page==='sales')renderPOS();
+  if(page==='inventory')renderInv();
+  if(page==='expenses')renderExpenses();
+  if(page==='reports')updateReports();
+  if(page==='companies')renderCompanies();
+  if(page==='users')renderUsers();
+  if(page==='activity')renderActivity();
+}
+
+// ════════════════════════════════════════════════
+// DASHBOARD
+// ════════════════════════════════════════════════
+function updateDash(){
+  const co=activeCo();const mp=new Date().toISOString().substr(0,7);
+  const td=(co.sales||[]).filter(s=>s.date===today());
+  const ms=(co.sales||[]).filter(s=>s.date?.startsWith(mp));
+  const me=(co.expenses||[]).filter(e=>e.date?.startsWith(mp));
+  document.getElementById('st-today').textContent=fmt(td.reduce((a,s)=>a+s.total,0));
+  document.getElementById('st-tc').textContent=td.length+' transactions';
+  document.getElementById('st-month').textContent=fmt(ms.reduce((a,s)=>a+s.total,0));
+  document.getElementById('st-mc').textContent=ms.length+' transactions';
+  document.getElementById('st-inv').textContent=(co.inventory||[]).length;
+  const low=(co.inventory||[]).filter(i=>i.stock<=3).length;
+  document.getElementById('st-ls').textContent=low>0?'⚠ '+low+' low stock':'✓ Stock OK';
+  document.getElementById('st-ls').className='sch '+(low>0?'dn':'up');
+  document.getElementById('st-exp').textContent=fmt(me.reduce((a,e)=>a+e.amount,0));
+  document.getElementById('st-ec').textContent=me.length+' records';
+  const rec=[...(co.sales||[])].reverse().slice(0,5);
+  document.getElementById('recent-txns').innerHTML=rec.length?rec.map(s=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)"><div><div style="font-size:13px;font-weight:600">${s.customer||'Walk-in'}</div><div style="font-size:11px;color:var(--muted)">${s.date} · ${s.payment}</div></div><div style="font-size:13px;font-weight:700;color:var(--accent)">${fmt(s.total)}</div></div>`).join(''):'<div style="color:var(--muted);font-size:13px;text-align:center;padding:14px">No transactions yet</div>';
+  const days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const wd=days.map((_,i)=>{const d=new Date();d.setDate(d.getDate()-(6-i));return(co.sales||[]).filter(s=>s.date===d.toISOString().split('T')[0]).reduce((a,s)=>a+s.total,0);});
+  if(APP.charts.sales)APP.charts.sales.destroy();
+  APP.charts.sales=new Chart(document.getElementById('sales-chart').getContext('2d'),{type:'bar',data:{labels:days,datasets:[{data:wd,backgroundColor:co.color||'#2563EB',borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#8a8990',font:{size:11}}},y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#8a8990',font:{size:10},callback:v=>'TZS '+Math.round(v/1000)+'K'}}}}});
+}
+
+// ════════════════════════════════════════════════
+// POS
+// ════════════════════════════════════════════════
+const catE={"Men's Wear":'👔',"Women's Wear":'👗',Kids:'🧒',Shoes:'👟',Accessories:'💍',Sportswear:'🏃'};
+function renderPOS(){
+  const s=(document.getElementById('pos-search')||{}).value||'';
+  const items=(activeCo().inventory||[]).filter(i=>i.stock>0&&i.name.toLowerCase().includes(s.toLowerCase()));
+  document.getElementById('pos-grid').innerHTML=items.length?items.map(i=>`<div class="pos-card" onclick="addToCart('${i.id}')"><div style="font-size:18px;margin-bottom:4px">${catE[i.cat]||'🧺'}</div><div style="font-size:13px;font-weight:600;margin-bottom:2px">${i.name}</div><div style="font-size:11px;color:var(--muted);margin-bottom:4px">${i.size||''} ${i.color||''}</div><div style="font-size:12px;color:var(--accent)">${fmt(i.price)}</div><div style="font-size:11px;color:var(--muted)">Stock: ${i.stock}</div></div>`).join(''):'<div style="color:var(--muted);font-size:13px;grid-column:span 3;text-align:center;padding:28px">No items available</div>';
+}
+function addToCart(id){const item=(activeCo().inventory||[]).find(i=>i.id===id);if(!item)return;const ex=APP.cart.find(c=>c.id===id);if(ex){if(ex.qty<item.stock)ex.qty++;}else APP.cart.push({id,name:item.name,price:item.price,qty:1,max:item.stock});renderCart();}
+function renderCart(){const el=document.getElementById('cart-items');if(!APP.cart.length){el.innerHTML='<div style="color:var(--muted);font-size:13px;text-align:center;padding:16px">Cart empty</div>';updCart();return;}el.innerHTML=APP.cart.map(c=>`<div class="cart-item"><div class="cin">${c.name}</div><button class="cqb" onclick="chQty('${c.id}',-1)">−</button><span style="font-size:13px;font-weight:600;min-width:20px;text-align:center">${c.qty}</span><button class="cqb" onclick="chQty('${c.id}',1)">+</button><div class="cit">${fmt(c.price*c.qty)}</div></div>`).join('');updCart();}
+function chQty(id,d){const i=APP.cart.findIndex(c=>c.id===id);if(i<0)return;APP.cart[i].qty+=d;if(APP.cart[i].qty<=0)APP.cart.splice(i,1);else if(APP.cart[i].qty>APP.cart[i].max)APP.cart[i].qty=APP.cart[i].max;renderCart();}
+function updCart(){const sub=APP.cart.reduce((a,c)=>a+c.price*c.qty,0);const disc=parseFloat(document.getElementById('disc-in').value)||0;const tot=sub*(1-disc/100);document.getElementById('cart-sub').textContent=fmt(sub);document.getElementById('cart-total').textContent=fmt(tot);}
+function clearCart(){APP.cart=[];renderCart();}
+function completeSale(){
+  if(!APP.cart.length){alert('Cart is empty!');return;}
+  const co=activeCo();const sub=APP.cart.reduce((a,c)=>a+c.price*c.qty,0);
+  const disc=parseFloat(document.getElementById('disc-in').value)||0;const total=sub*(1-disc/100);
+  const payment=document.getElementById('pay-method').value;const customer=document.getElementById('cust-name').value||'Walk-in';
+  const sale={id:uid(),date:today(),items:APP.cart.map(c=>({name:c.name,qty:c.qty,price:c.price})),subtotal:sub,discount:disc,total,payment,customer,cashier:APP.user.name};
+  APP.cart.forEach(c=>{const inv=(co.inventory||[]).find(i=>i.id===c.id);if(inv)inv.stock-=c.qty;});
+  if(!co.sales)co.sales=[];co.sales.push(sale);saveLocal();log('Sale completed',`${fmt(total)} — ${customer}`);
+  document.getElementById('receipt-body').innerHTML=`<div style="text-align:center;font-weight:700;font-size:14px;margin-bottom:6px">${co.name}</div><div style="text-align:center;font-size:11px;color:var(--muted);margin-bottom:8px">${co.addr||''}</div><div style="font-size:11px;color:var(--muted);margin-bottom:5px">${new Date().toLocaleString()}</div><div style="margin-bottom:5px">Customer: ${customer}</div><div style="border-top:1px solid var(--border);padding-top:6px;margin-bottom:6px">${sale.items.map(i=>`<div style="display:flex;justify-content:space-between;margin-bottom:2px"><span>${i.name} x${i.qty}</span><span>${fmt(i.price*i.qty)}</span></div>`).join('')}</div><div style="display:flex;justify-content:space-between;font-weight:700;font-size:14px;border-top:1px solid var(--border);padding-top:5px"><span>TOTAL</span><span>${fmt(total)}</span></div><div style="font-size:11px;color:var(--muted);margin-top:5px">Payment: ${payment} · Cashier: ${APP.user.name}</div><div style="text-align:center;font-size:11px;color:var(--muted);margin-top:8px">${co.receipt||'Thank you!'}</div>`;
+  openMo('mo-receipt');APP.cart=[];renderCart();document.getElementById('cust-name').value='';document.getElementById('disc-in').value=0;renderInv();
+}
+
+// ════════════════════════════════════════════════
+// INVENTORY
+// ════════════════════════════════════════════════
+function openInvModal(){APP.editingInvId=null;document.getElementById('inv-modal-title').textContent='Add Inventory Item';['inv-name','inv-size','inv-color','inv-stock','inv-price','inv-cost','inv-sku'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});openMo('mo-inv');}
+function renderInv(){
+  const co=activeCo();const s=document.getElementById('inv-search').value.toLowerCase();const cat=document.getElementById('inv-cat').value;
+  const items=(co.inventory||[]).filter(i=>i.name.toLowerCase().includes(s)&&(!cat||i.cat===cat));
+  document.getElementById('inv-empty').style.display=items.length?'none':'block';
+  const canEdit=canRole('manager');
+  document.getElementById('inv-tbody').innerHTML=items.map(i=>{
+    const st=i.stock===0?'<span class="badge bd">Out</span>':i.stock<=3?'<span class="badge bw">Low</span>':'<span class="badge bs">OK</span>';
+    const acts=canEdit?`<div style="display:flex;gap:5px"><button class="btn btn-xs btn-s" onclick="editInv('${i.id}')">Edit</button><button class="btn btn-xs btn-d" onclick="delInv('${i.id}')">Del</button></div>`:'—';
+    return `<tr><td><strong>${i.name}</strong>${i.sku?`<br><span style="font-size:11px;color:var(--muted)">${i.sku}</span>`:''}</td><td>${i.cat}</td><td>${i.size||'-'}</td><td>${Math.round(i.price).toLocaleString()}</td><td><strong>${i.stock}</strong></td><td>${st}</td><td>${acts}</td></tr>`;
+  }).join('');
+}
+function saveInv(){
+  const co=activeCo();const name=document.getElementById('inv-name').value.trim();
+  const price=parseFloat(document.getElementById('inv-price').value);const stock=parseInt(document.getElementById('inv-stock').value);
+  if(!name||isNaN(price)||isNaN(stock)){alert('Please fill required fields (Name, Price, Stock).');return;}
+  const item={id:APP.editingInvId||uid(),name,cat:document.getElementById('inv-cat-sel').value,size:document.getElementById('inv-size').value,color:document.getElementById('inv-color').value,price,cost:parseFloat(document.getElementById('inv-cost').value)||0,stock,sku:document.getElementById('inv-sku').value};
+  if(!co.inventory)co.inventory=[];
+  if(APP.editingInvId){const idx=co.inventory.findIndex(i=>i.id===APP.editingInvId);if(idx>=0)co.inventory[idx]=item;log('Inventory updated',name);}
+  else{co.inventory.push(item);log('Inventory added',name);}
+  APP.editingInvId=null;saveLocal();closeMo('mo-inv');renderInv();renderPOS();
+}
+function editInv(id){const co=activeCo();const i=(co.inventory||[]).find(x=>x.id===id);if(!i)return;APP.editingInvId=id;document.getElementById('inv-name').value=i.name;document.getElementById('inv-cat-sel').value=i.cat;document.getElementById('inv-size').value=i.size||'';document.getElementById('inv-color').value=i.color||'';document.getElementById('inv-stock').value=i.stock;document.getElementById('inv-price').value=i.price;document.getElementById('inv-cost').value=i.cost||'';document.getElementById('inv-sku').value=i.sku||'';document.getElementById('inv-modal-title').textContent='Edit Item';openMo('mo-inv');}
+function delInv(id){if(!confirm('Delete this item?'))return;const co=activeCo();const item=(co.inventory||[]).find(i=>i.id===id);co.inventory=(co.inventory||[]).filter(i=>i.id!==id);log('Inventory deleted',item?.name||id);saveLocal();renderInv();renderPOS();}
+
+// ════════════════════════════════════════════════
+// EXPENSES
+// ════════════════════════════════════════════════
+function openExpModal(){document.getElementById('exp-date').value=today();['exp-desc','exp-amount'].forEach(id=>document.getElementById(id).value='');openMo('mo-exp');}
+function renderExpenses(){
+  const co=activeCo();const sorted=[...(co.expenses||[])].sort((a,b)=>b.date.localeCompare(a.date));
+  document.getElementById('exp-empty').style.display=sorted.length?'none':'block';
+  const m=new Date().toISOString().substr(0,7);const y=new Date().getFullYear().toString();
+  document.getElementById('em').textContent=fmt((co.expenses||[]).filter(e=>e.date.startsWith(m)).reduce((a,e)=>a+e.amount,0));
+  document.getElementById('ey').textContent=fmt((co.expenses||[]).filter(e=>e.date.startsWith(y)).reduce((a,e)=>a+e.amount,0));
+  document.getElementById('et').textContent=fmt((co.expenses||[]).reduce((a,e)=>a+e.amount,0));
+  document.getElementById('exp-tbody').innerHTML=sorted.map(e=>`<tr><td>${e.date}</td><td>${e.cat}</td><td>${e.desc}</td><td><strong>${Math.round(e.amount).toLocaleString()}</strong></td><td>${e.paid}</td><td>${canRole('owner')?`<button class="btn btn-xs btn-d" onclick="delExp('${e.id}')">Del</button>`:'—'}</td></tr>`).join('');
+}
+function saveExp(){const co=activeCo();const date=document.getElementById('exp-date').value;const desc=document.getElementById('exp-desc').value.trim();const amount=parseFloat(document.getElementById('exp-amount').value);if(!date||!desc||isNaN(amount)||amount<=0){alert('Fill required fields.');return;}const exp={id:uid(),date,cat:document.getElementById('exp-cat').value,desc,amount,paid:document.getElementById('exp-paid').value,by:APP.user.name};if(!co.expenses)co.expenses=[];co.expenses.push(exp);saveLocal();log('Expense added',`${exp.cat} — ${fmt(amount)}`);closeMo('mo-exp');renderExpenses();}
+function delExp(id){if(!confirm('Delete?'))return;const co=activeCo();co.expenses=(co.expenses||[]).filter(e=>e.id!==id);saveLocal();renderExpenses();}
+
+// ════════════════════════════════════════════════
+// REPORTS
+// ════════════════════════════════════════════════
+function updateReports(){
+  const co=activeCo();const period=document.getElementById('rep-period').value;const now=new Date();let fn;
+  if(period==='week'){const wa=new Date(now);wa.setDate(wa.getDate()-7);fn=d=>new Date(d)>=wa;}
+  else if(period==='month'){const p=now.toISOString().substr(0,7);fn=d=>d.startsWith(p);}
+  else if(period==='year'){fn=d=>d.startsWith(now.getFullYear().toString());}
+  else fn=()=>true;
+  const fs=(co.sales||[]).filter(s=>fn(s.date));const fe=(co.expenses||[]).filter(e=>fn(e.date));
+  const rev=fs.reduce((a,s)=>a+s.total,0);const exp=fe.reduce((a,e)=>a+e.amount,0);
+  document.getElementById('rr').textContent=fmt(rev);document.getElementById('re').textContent=fmt(exp);
+  document.getElementById('rp').textContent=fmt(rev-exp);document.getElementById('rp').style.color=(rev-exp)>=0?'var(--success)':'var(--danger)';document.getElementById('rt').textContent=fs.length;
+  if(APP.charts.re)APP.charts.re.destroy();if(APP.charts.cat)APP.charts.cat.destroy();
+  const lbls=getLabels(period,fs);const ac=co.color||'#2563EB';
+  APP.charts.re=new Chart(document.getElementById('rev-chart').getContext('2d'),{type:'line',data:{labels:lbls.map(l=>l.substr(-5)),datasets:[{label:'Revenue',data:lbls.map(l=>fs.filter(s=>s.date.startsWith(l)).reduce((a,s)=>a+s.total,0)),borderColor:ac,tension:.4,fill:false},{label:'Expenses',data:lbls.map(l=>fe.filter(e=>e.date.startsWith(l)).reduce((a,e)=>a+e.amount,0)),borderColor:'#e05252',tension:.4,fill:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8a8990',font:{size:11}}}},scales:{x:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#8a8990',font:{size:10}}},y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#8a8990',font:{size:10}}}}}});
+  const cm={};fs.forEach(s=>s.items&&s.items.forEach(it=>{const inv=(co.inventory||[]).find(i=>i.name===it.name);const cat=inv?inv.cat:'Other';cm[cat]=(cm[cat]||0)+it.price*it.qty;}));
+  APP.charts.cat=new Chart(document.getElementById('cat-chart').getContext('2d'),{type:'doughnut',data:{labels:Object.keys(cm),datasets:[{data:Object.values(cm),backgroundColor:[ac,'#5298e0','#52c97a','#e05252','#e0a852','#9952e0']}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#8a8990',font:{size:11},boxWidth:12}}}}});
+  const im={};fs.forEach(s=>s.items&&s.items.forEach(it=>{if(!im[it.name])im[it.name]={qty:0,rev:0};im[it.name].qty+=it.qty;im[it.name].rev+=it.price*it.qty;}));
+  const top=Object.entries(im).sort((a,b)=>b[1].rev-a[1].rev).slice(0,8);
+  document.getElementById('top-tbody').innerHTML=top.length?top.map(([n,d],i)=>`<tr><td>${i+1}</td><td>${n}</td><td>${d.qty}</td><td>${fmt(d.rev)}</td></tr>`).join(''):'<tr><td colspan="4" style="text-align:center;color:var(--muted)">No data</td></tr>';
+}
+function getLabels(p,sales){const now=new Date();if(p==='week'){return Array.from({length:7},(_,i)=>{const d=new Date(now);d.setDate(d.getDate()-(6-i));return d.toISOString().split('T')[0];});}if(p==='month'){const days=new Date(now.getFullYear(),now.getMonth()+1,0).getDate();return Array.from({length:days},(_,i)=>`${now.toISOString().substr(0,7)}-${String(i+1).padStart(2,'0')}`);}if(p==='year'){return Array.from({length:12},(_,i)=>`${now.getFullYear()}-${String(i+1).padStart(2,'0')}`);}const months=new Set(sales.map(s=>s.date.substr(0,7)));return[...months].sort();}
+function exportCSV(){const co=activeCo();const rows=[['Date','Customer','Items','Total','Payment','Cashier']];(co.sales||[]).forEach(s=>rows.push([s.date,s.customer,s.items.map(i=>i.name+'x'+i.qty).join(';'),s.total,s.payment,s.cashier||'']));const csv=rows.map(r=>r.join(',')).join('\n');const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download=`tricorepos_${co.name.replace(/\s/g,'_')}.csv`;a.click();}
+
+// ════════════════════════════════════════════════
+// COMPANIES PAGE
+// ════════════════════════════════════════════════
+function renderCompanies(){
+  document.getElementById('companies-list').innerHTML=APP.companies.map(co=>{
+    const assignedUsers=APP.users.filter(u=>(u.companies||[]).includes(co.id)||u.role==='owner');
+    return `<div class="co-card">
+      <div class="co-logo" style="background:${co.color||'#2563EB'}">${co.name[0].toUpperCase()}</div>
+      <div class="co-ci">
+        <div class="co-cn">${co.name}</div>
+        <div class="co-cs">${co.type||''} · ${co.city||''}, ${co.country||''} · ${co.currency||'TZS'}</div>
+        <div class="co-cs">${co.addr||''}${co.phone?' · '+co.phone:''}</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:8px">Users (${assignedUsers.length}):</div>
+        <div class="co-chips">${assignedUsers.length?assignedUsers.map(u=>`<span class="chip">${ROLES[u.role]?.e||''} ${u.name}</span>`).join(''):'<span style="font-size:12px;color:var(--muted)">No users assigned</span>'}</div>
+        <div class="co-actions">
+          <button class="btn btn-p btn-sm" onclick="switchCo('${co.id}')">Switch to this</button>
+          <button class="btn btn-s btn-sm" onclick="editCoModal('${co.id}')">✏ Edit</button>
+          <button class="btn btn-s btn-sm" onclick="openAssignModal('${co.id}')">👥 Assign Users</button>
+          ${APP.companies.length>1?`<button class="btn btn-d btn-sm" onclick="deleteCo('${co.id}')">Delete</button>`:''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// BUILD user checkbox list inside company modal
+function buildCoUserList(coId){
+  const nonOwners=APP.users.filter(u=>u.role!=='owner');
+  const assignedIds=coId?APP.users.filter(u=>(u.companies||[]).includes(coId)).map(u=>u.id):[];
+  document.getElementById('co-user-assign').innerHTML=nonOwners.length
+    ?nonOwners.map(u=>`<label class="ai"><input type="checkbox" id="cau-${u.id}" ${assignedIds.includes(u.id)?'checked':''}><div class="aa" style="background:${RC[u.role]}">${u.name[0]}</div><div><div class="an">${u.name}</div><div class="ar">${ROLES[u.role]?.e} ${ROLES[u.role]?.l} · ${u.email}</div></div></label>`).join('')
+    :'<div style="color:var(--muted);font-size:12px;padding:8px">No staff users yet — add users first.</div>';
+}
+
+function openCoModal(){
+  APP.editingCoId=null;APP.selColor='#2563EB';
+  document.getElementById('co-modal-title').textContent='Add New Company';
+  ['co-name','co-city','co-phone','co-tin','co-addr','co-receipt','co-sheet'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  document.getElementById('co-type').value='Clothing & Fashion';
+  document.getElementById('co-country').value='Tanzania';
+  document.getElementById('co-currency').value='TZS';
+  document.querySelectorAll('#co-swatches .sw').forEach((s,i)=>s.classList.toggle('sel',i===0));
+  buildCoUserList(null);
+  document.getElementById('co-drop').classList.remove('open');
+  openMo('mo-company');
+}
+
+function editCoModal(id){
+  const co=APP.companies.find(c=>c.id===id);if(!co)return;
+  APP.editingCoId=id;APP.selColor=co.color||'#2563EB';
+  document.getElementById('co-modal-title').textContent='Edit Company';
+  document.getElementById('co-name').value=co.name||'';
+  document.getElementById('co-type').value=co.type||'Clothing & Fashion';
+  document.getElementById('co-city').value=co.city||'';
+  document.getElementById('co-country').value=co.country||'Tanzania';
+  document.getElementById('co-phone').value=co.phone||'';
+  document.getElementById('co-tin').value=co.tin||'';
+  document.getElementById('co-currency').value=co.currency||'TZS';
+  document.getElementById('co-sheet').value=co.sheet||'';
+  document.getElementById('co-addr').value=co.addr||'';
+  document.getElementById('co-receipt').value=co.receipt||'';
+  document.querySelectorAll('#co-swatches .sw').forEach(s=>s.classList.toggle('sel',s.style.background===co.color));
+  buildCoUserList(id);
+  openMo('mo-company');
+}
+
+function saveCompany(){
+  const name=document.getElementById('co-name').value.trim();
+  if(!name){alert('Company name is required.');return;}
+  const isEdit=!!APP.editingCoId;
+  const existing=isEdit?APP.companies.find(c=>c.id===APP.editingCoId):null;
+  const co={
+    id:APP.editingCoId||uid(),name,
+    type:document.getElementById('co-type').value,
+    city:document.getElementById('co-city').value,
+    country:document.getElementById('co-country').value,
+    phone:document.getElementById('co-phone').value,
+    tin:document.getElementById('co-tin').value,
+    currency:document.getElementById('co-currency').value,
+    sheet:document.getElementById('co-sheet').value,
+    addr:document.getElementById('co-addr').value,
+    receipt:document.getElementById('co-receipt').value,
+    color:APP.selColor,
+    createdAt:existing?.createdAt||today(),
+    inventory:existing?.inventory||[],
+    sales:existing?.sales||[],
+    expenses:existing?.expenses||[]
+  };
+  if(isEdit){
+    const idx=APP.companies.findIndex(c=>c.id===APP.editingCoId);
+    if(idx>=0)APP.companies[idx]=co;
+    log('Company updated',co.name,co.id);
+  } else {
+    APP.companies.push(co);
+    APP.activeCoId=co.id;
+    log('Company created',co.name,co.id);
+  }
+  // Save user assignments from checkboxes
+  APP.users.filter(u=>u.role!=='owner').forEach(u=>{
+    const cb=document.getElementById('cau-'+u.id);if(!cb)return;
+    if(!u.companies)u.companies=[];
+    if(cb.checked){if(!u.companies.includes(co.id))u.companies.push(co.id);}
+    else{u.companies=u.companies.filter(x=>x!==co.id);}
+  });
+  saveLocal();closeMo('mo-company');applyTheme();
+  // Re-render if on companies page
+  if(document.getElementById('page-companies').classList.contains('active'))renderCompanies();
+  buildDrop();
+}
+
+function pickColor(c,el){APP.selColor=c;document.querySelectorAll('#co-swatches .sw').forEach(s=>s.classList.remove('sel'));el.classList.add('sel');}
+
+function deleteCo(id){
+  if(!confirm('Delete this company and ALL its data? This cannot be undone.'))return;
+  const co=APP.companies.find(c=>c.id===id);
+  APP.companies=APP.companies.filter(c=>c.id!==id);
+  APP.users.forEach(u=>{if(u.companies)u.companies=u.companies.filter(x=>x!==id);});
+  if(APP.activeCoId===id)APP.activeCoId=APP.companies[0]?.id||null;
+  log('Company deleted',co?.name||id,null);
+  saveLocal();applyTheme();renderCompanies();buildDrop();
+}
+
+// ════════════════════════════════════════════════
+// ASSIGN USERS MODAL
+// ════════════════════════════════════════════════
+function openAssignModal(coId){
+  APP.assigningCoId=coId;
+  const co=APP.companies.find(c=>c.id===coId);
+  document.getElementById('assign-title').textContent='Assign Users — '+(co?.name||'');
+  const nonOwners=APP.users.filter(u=>u.role!=='owner');
+  const assignedIds=APP.users.filter(u=>(u.companies||[]).includes(coId)).map(u=>u.id);
+  document.getElementById('assign-list').innerHTML=nonOwners.length
+    ?nonOwners.map(u=>`<label class="ai"><input type="checkbox" id="am-${u.id}" ${assignedIds.includes(u.id)?'checked':''}><div class="aa" style="background:${RC[u.role]}">${u.name[0]}</div><div><div class="an">${u.name}</div><div class="ar">${ROLES[u.role]?.e} ${ROLES[u.role]?.l} · ${u.email}</div></div></label>`).join('')
+    :'<div style="color:var(--muted);font-size:12px;padding:8px">No staff users yet. Add users first.</div>';
+  openMo('mo-assign');
+}
+
+function saveAssign(){
+  const coId=APP.assigningCoId;if(!coId)return;
+  APP.users.filter(u=>u.role!=='owner').forEach(u=>{
+    const cb=document.getElementById('am-'+u.id);if(!cb)return;
+    if(!u.companies)u.companies=[];
+    if(cb.checked){if(!u.companies.includes(coId))u.companies.push(coId);}
+    else{u.companies=u.companies.filter(x=>x!==coId);}
+  });
+  saveLocal();log('Users assigned',(APP.companies.find(c=>c.id===coId)||{}).name,coId);
+  closeMo('mo-assign');renderCompanies();if(document.getElementById('page-users').classList.contains('active'))renderUsers();
+}
+
+// ════════════════════════════════════════════════
+// USERS
+// ════════════════════════════════════════════════
+function openUserModal(){
+  APP.editingUserId=null;
+  document.getElementById('um-title').textContent='Add Staff Member';
+  ['u-name','u-email','u-notes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('u-role').value='manager';
+  document.getElementById('u-status').value='active';
+  buildUserCoList(null);
+  openMo('mo-user');
+}
+
+function buildUserCoList(userId){
+  const u=userId?APP.users.find(x=>x.id===userId):null;
+  const assigned=u?u.companies||[]:[];
+  document.getElementById('u-co-list').innerHTML=APP.companies.length
+    ?APP.companies.map(co=>`<label class="ai"><input type="checkbox" id="uco-${co.id}" ${assigned.includes(co.id)?'checked':''}><div class="co-dot" style="background:${co.color||'#2563EB'};width:22px;height:22px;border-radius:5px;font-size:10px;font-weight:800;color:#fff;display:flex;align-items:center;justify-content:center">${co.name[0]}</div><div><div class="an">${co.name}</div><div class="ar">${co.city||''}, ${co.country||''}</div></div></label>`).join('')
+    :'<div style="color:var(--muted);font-size:12px;padding:8px">No companies yet.</div>';
+}
+
+function saveUser(){
+  const name=document.getElementById('u-name').value.trim();
+  const email=document.getElementById('u-email').value.trim();
+  const role=document.getElementById('u-role').value;
+  if(!name||!email){alert('Name and email are required.');return;}
+  const companies=APP.companies.map(c=>c.id).filter(id=>{const cb=document.getElementById('uco-'+id);return cb&&cb.checked;});
+  if(APP.editingUserId){
+    const idx=APP.users.findIndex(u=>u.id===APP.editingUserId);
+    if(idx>=0)APP.users[idx]={...APP.users[idx],name,email,role,status:document.getElementById('u-status').value,notes:document.getElementById('u-notes').value,companies};
+    log('User updated',`${name} → ${role}`);
+  } else {
+    if(APP.users.find(u=>u.email.toLowerCase()===email.toLowerCase())){alert('A user with this email already exists.');return;}
+    APP.users.push({id:uid(),name,email,role,status:document.getElementById('u-status').value,notes:document.getElementById('u-notes').value,companies,created:today()});
+    log('User added',`${name} as ${role}`);
+  }
+  APP.editingUserId=null;saveLocal();closeMo('mo-user');renderUsers();renderCompanies();buildDrop();
+}
+
+function renderUsers(){
+  document.getElementById('users-list').innerHTML=APP.users.map(u=>{
+    const r=ROLES[u.role]||ROLES.viewer;const isMe=APP.user&&u.email===APP.user.email;
+    const assignedCos=APP.role==='owner'||u.role==='owner'?APP.companies:APP.companies.filter(c=>(u.companies||[]).includes(c.id));
+    return `<div style="background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:14px;display:flex;align-items:flex-start;gap:12px;margin-bottom:10px">
+      <div style="width:34px;height:34px;border-radius:50%;background:${RC[u.role]};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0">${u.name[0]}</div>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:600">${u.name}${isMe?' <span style="font-size:11px;color:var(--muted)">(you)</span>':''}</div>
+        <div style="font-size:11px;color:var(--muted)">${u.email}${u.notes?' · '+u.notes:''}</div>
+        <div style="margin-top:6px;display:flex;gap:5px;flex-wrap:wrap;align-items:center">
+          <span class="badge ${u.role==='owner'?'bw':u.role==='manager'?'bi':u.role==='cashier'?'bs':'bm'}">${r.e} ${r.l}</span>
+          <span class="badge ${u.status==='active'?'bs':'bd'}">${u.status}</span>
+          ${assignedCos.map(c=>`<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:2px 8px;border-radius:20px;background:${c.color}22;color:${c.color};border:1px solid ${c.color}44"><span style="width:6px;height:6px;border-radius:50%;background:${c.color};display:inline-block"></span>${c.name}</span>`).join('')}
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0">
+        ${!isMe?`<button class="btn btn-xs btn-s" onclick="editUserModal('${u.id}')">Edit</button>`:''}
+        ${!isMe&&u.role!=='owner'?`<button class="btn btn-xs btn-d" onclick="deleteUser('${u.id}')">Remove</button>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function editUserModal(id){
+  const u=APP.users.find(x=>x.id===id);if(!u)return;
+  APP.editingUserId=id;
+  document.getElementById('u-name').value=u.name;
+  document.getElementById('u-email').value=u.email;
+  document.getElementById('u-role').value=u.role;
+  document.getElementById('u-status').value=u.status;
+  document.getElementById('u-notes').value=u.notes||'';
+  document.getElementById('um-title').textContent='Edit User';
+  buildUserCoList(id);
+  openMo('mo-user');
+}
+
+function deleteUser(id){
+  if(!confirm('Remove this user?'))return;
+  const u=APP.users.find(x=>x.id===id);
+  APP.users=APP.users.filter(x=>x.id!==id);
+  log('User removed',u?.name||id);saveLocal();renderUsers();renderCompanies();buildDrop();
+}
+
+// ════════════════════════════════════════════════
+// ACTIVITY
+// ════════════════════════════════════════════════
+function populateActFilters(){
+  const sel=document.getElementById('act-co-f');
+  sel.innerHTML='<option value="">All Companies</option>'+APP.companies.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+}
+function renderActivity(){
+  const coF=document.getElementById('act-co-f').value;const roleF=document.getElementById('act-role-f').value;
+  const logs=APP.activityLog.filter(a=>(!coF||a.coId===coF)&&(!roleF||a.role===roleF));
+  const el=document.getElementById('act-list');const emp=document.getElementById('act-empty');
+  if(!logs.length){el.innerHTML='';emp.style.display='block';return;}
+  emp.style.display='none';
+  el.innerHTML=logs.map(a=>`<div class="act-item"><div class="act-dot" style="background:${RC[a.role]||'#8a8990'}"></div><div style="font-size:13px;flex:1"><strong>${a.user}</strong> <span style="color:var(--muted);font-size:11px">(${a.role})</span>${a.coName?` <span style="font-size:11px;color:var(--muted)">@ ${a.coName}</span>`:''} — ${a.action}${a.detail?': <span style="color:var(--muted)">'+a.detail+'</span>':''}</div><div style="font-size:11px;color:var(--muted);white-space:nowrap">${new Date(a.ts).toLocaleString('en-TZ',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}</div></div>`).join('');
+}
+
+function refreshAll(){updateDash();renderPOS();renderInv();renderExpenses();}
+</script>
+</body>
+</html>
